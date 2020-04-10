@@ -13,7 +13,7 @@ class Book {
 
 
     //Comparing two books if they are the same
-
+    
     bool operator ==(const Book& book) const
     {
       if(Title == book.Title)
