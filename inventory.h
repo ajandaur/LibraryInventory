@@ -1,26 +1,24 @@
 #pragma once
 
 #include "book.h"
+#include "CheckInOutResult.h"
 #include<vector>
+
 
 class Inventory
 {
   public:
 
-    int maxBookId;
-
-
-    Inventory();
-
-    int getNextBookId();
+    void DisplayCheckedOutBooks();
+    void DisplayAllBooks();
     int numberOfBooks();
-    Book* getBookByIndex(int index);
+    Book getBookByIndex(int index); //pointer
     void addBook(Book book);
-    void removeBook (std::string title); //TODO
+    void LoadBooks();
+    void removeBook (std::string title);
     int findBookByTitle(std::string title);
-    void checkOutBook(Book* book);
-    void checkInBook(Book* book);
-    
+    CheckInOrOutResult checkInOrOutBook(std::string title, bool checkOut); //pointer
+
   private:
     std::vector<Book> Books;
 };

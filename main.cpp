@@ -1,21 +1,170 @@
 #include <iostream>
+#include <vector>
+#include <string>
+#include <fstream>
 #include "book.h"
 #include "inventory.h"
-#include <string>
+#include "CheckInOutResult.h"
+#include "User.h"
+
 
 using namespace std;
 
 Inventory _inventory;
+vector<User> _users;
+User _loggedInUser;
+
+Role GetRoleFromIntVal(int roleVal)
+{
+  Role outRole;
+
+  if(roleVal == 0)
+  {
+    outRole = Role::Admin;
+  } else if (roleVal == 1)
+  {
+    outRole = Role::Employee;
+  } else
+  {
+    outRole = Role::Member;
+  }
+  return outRole;
+}
+
+
+void LoadUsers()
+{
+  ifstream in("users.txt");
+
+  string lineData[2];
+  //lineData[0] = username
+  //lineData[1] = role int val
+
+
+  string userLine;
+  while(getline(in, userLine))
+  {
+  size_t  index = userLine.find('|');
+  lineData[0] = userLine.substr(0, index);
+  lineData[1] = userLine.substr(index+1);
+
+  User loadedUser;
+  loadedUser.Username = lineData[0];
+  loadedUser.Role = GetRoleFromIntVal(stoi(lineData[1]));
+
+  _users.push_back(loadedUser);
+  }
+}
+
+int GetIntValFromRole(Role role)
+{
+  int roleVal = -1;
+  if(role == Role::Admin)
+  {
+    roleVal = 0;
+  } else if (role == Role::Employee)
+  {
+    roleVal = 1;
+  } else if (role == Role::Member)
+  {
+    roleVal = 2;
+  }
+  return roleVal;
+}
+
+void CreateAccount ()
+{
+
+  User newUser;
+
+  cout << "First name:" <<endl;
+  string firstName;
+  getline(cin, firstName);
+
+  cout << "Last name:" <<endl;
+  string lastName;
+  getline(cin, lastName);
+
+  cout << "Username: " <<endl;
+  getline(cin, newUser.Username);
+
+  cout << "Choose a role:" <<endl;
+  cout << "1. Admin" <<endl;
+  cout << "2. Employee" <<endl;
+  cout << "3. Member" <<endl;
+
+  int roleOption;
+  cin >> roleOption;
+  cin.ignore();
+
+  if(roleOption == 1)
+  {
+    newUser.Role = Role::Admin;
+  } else if (roleOption == 2)
+  {
+    newUser.Role = Role::Employee;
+  } else
+  {
+    newUser.Role = Role::Member;
+  }
+
+  //3|anmol|0
+
+  _users.push_back(newUser);
+
+  ofstream o("users.txt", ios_base::app);
+  o << newUser.Username << "|" << GetIntValFromRole(newUser.Role) << endl;
+  o.close();
+}
+
+void Login()
+{
+  cout << "Please input which option you desire." <<endl;
+  cout << "1. Log in" <<endl;
+  cout << "2. Create an account" <<endl;
+
+  int option;
+  cin >> option;
+  cin.ignore();
+
+  if(option == 2)
+  {
+    CreateAccount ();
+  }
+  while(true){
+  cout << "Enter username: ";
+  string username;
+  getline(cin, username);
+
+  User user;
+  user.Username = username;
+
+  vector<User>::iterator it = find(_users.begin(), _users.end(), user);
+
+    if(it != _users.end())
+    {
+      _loggedInUser = _users[it - _users.begin()];
+      break;
+    }
+  }
+}
 
 void displayStartupmenu()
 {
+  cout << endl;
   cout << "Please input which option you desire." <<endl;
-  cout << "1. Add a book" <<endl;
-  cout << "2. List all books" <<endl;
-  cout << "3. Check out book" <<endl;
-  cout << "4. Check in book" <<endl;
-  cout << "5. Remove book from library" <<endl;
-  cout << "6. List all checked out books" << endl;
+
+  cout << "1. List all books" <<endl;
+  cout << "2. Check out book" <<endl;
+  cout << "3. Check in book" <<endl;
+
+  if(_loggedInUser.Role == Role::Employee || _loggedInUser.Role == Role::Admin)
+  {
+    cout << "4. Add a book" <<endl;
+    cout << "5. Remove book from library" <<endl;
+    cout << "6. List all checked out books" << endl;
+  }
+  cout << "9. Log out" << endl;
   cout << "0. Exit Library Inventory" <<endl;
 }
 
@@ -29,67 +178,50 @@ void addNewBook()
   string bookAuthor;
   getline(cin, bookAuthor); //use getline to get the full title
 
-  int id = _inventory.getNextBookId();
-  //temporary solution, problem when removing books
 
-  Book newBook(id, bookTitle, bookAuthor);
+  Book newBook(bookTitle, bookAuthor);
 
   _inventory.addBook(newBook);
 }
 
 void listAllBooks()
 {
-  cout << "\nID\tTitle\tAuthor\n";
-  for (int i = 0; i < _inventory.numberOfBooks(); i++)
-  {
-    cout << _inventory.getBookByIndex(i)-> Id << "\t" << _inventory.getBookByIndex(i)-> Title << "\t" << _inventory.getBookByIndex(i)-> Author << endl;
-  }
-  cout << endl;
+  _inventory.DisplayAllBooks();
 }
 
-void checkInOrOutBook(bool checkIn)
+void checkInOrOutBook(bool checkOut)
 {
   string inOrOut;
-  if(checkIn)
+  if(checkOut)
   {
-    inOrOut = "in";
+    inOrOut = "out";
+
   }
   else
   {
-    inOrOut = "out";
+    inOrOut = "in";
   }
   cout << "Enter the title of the book you would like to check " + inOrOut + ": ";
   string title;
   getline(cin, title);
 
-  int foundBookIndex = _inventory.findBookByTitle(title);
+  CheckInOrOutResult result = _inventory.checkInOrOutBook(title, checkOut);
 
-  if(foundBookIndex >= 0)
+  if(result == CheckInOrOutResult::BookNotFound)
   {
-      Book* foundBook = _inventory.getBookByIndex(foundBookIndex);
-
-      // if checkedOut == false then we're checked in
-      // if checkedOut == true then we're checked out
-
-    if(!foundBook-> checkedOut == checkIn) //get the object at the point and look at the checked out property
-    {
-      cout << "Book already checked " + inOrOut << endl;
-      return; //not break because we are not in a switch statement
-    }
-
-    if(checkIn)
-    {
-      _inventory.checkInBook(foundBook);
-    }
-    else {
-      _inventory.checkOutBook(foundBook);
-    }
-
-    cout << "Success, book checked" + inOrOut + "!"<<endl;
+    cout << "Book not found";
+  }
+  else if(result == CheckInOrOutResult::Success)
+  {
+    cout << "Book checked " + inOrOut<<endl;
+  }
+  else if(result == CheckInOrOutResult::AlreadyCheckedIn || result == CheckInOrOutResult::AlreadyCheckedOut)
+  {
+    cout << "Book aleady checked " + inOrOut << endl;
   }
   else
   {
-    cout << "Sorry! Your requested book was not found!"<<endl;
+    cout << "Book failed checking " + inOrOut << endl;
   }
 }
 
@@ -103,19 +235,23 @@ void removeBook()
 
 void displayCheckedOutBooks()
 {
-  for (int i = 0; i < _inventory.numberOfBooks(); i++) {
-    if(_inventory.getBookByIndex(i)-> checkedOut)
-    {
-        cout << _inventory.getBookByIndex(i)-> Id << "\t" << _inventory.getBookByIndex(i)-> Title << "\t" << _inventory.getBookByIndex(i)-> Author << endl;
-    }
-  }
-  cout << endl;
+  _inventory.DisplayCheckedOutBooks();
 }
 
 
 int main()
 {
-  while(true) {
+  LoadUsers();
+
+  while(true)
+  {
+  Login();
+
+
+  _inventory.LoadBooks();
+  bool isLoggedIn = true;
+
+  while(isLoggedIn) {
 
     displayStartupmenu();
 
@@ -129,25 +265,30 @@ int main()
         cout << "Thank you for using our service!";
         return 0;
       case 1:
-        addNewBook();
-        break;
-      case 2:
         listAllBooks();
         break;
+      case 2:
+        checkInOrOutBook(true); //checking out
+        break;
       case 3:
-        checkInOrOutBook(false); //checking out
+        checkInOrOutBook(false); //checking in
         break;
       case 4:
-        checkInOrOutBook(true); //checking in
+        addNewBook();
         break;
       case 5:
         removeBook();
         break;
       case 6:
-      displayCheckedOutBooks();
+        displayCheckedOutBooks();
       break;
+      case 9:
+        isLoggedIn = false;
+        break;
+      default:
+        cout << "Invalid Selection. Input valid number.." << endl;
+        break;
+      }
     }
-
   } //end of while loop
-
 }

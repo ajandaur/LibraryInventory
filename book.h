@@ -4,16 +4,16 @@
 class Book {
   public:
     int Id;
-    std::string Title;
-    std::string Author;
-    bool checkedOut = false;
 
     Book();
-    Book(int id, std::string title, std::string author);
+    Book(std::string title, std::string author);
 
+    void CheckInOrOut(bool checkOut);
+    void DisplayBook();
+    bool IsCheckedOut();
+    std::string GetBookFileData();
 
-    //Comparing two books if they are the same
-    
+    //overload operator to see if book titles are the same = same book
     bool operator ==(const Book& book) const
     {
       if(Title == book.Title)
@@ -21,4 +21,9 @@ class Book {
       else
         return false;
     }
+
+  private:
+    std::string Title;
+    std::string Author;
+    bool checkedOut;
 };
