@@ -7,17 +7,18 @@ using namespace std;
 
 int Inventory::numberOfBooks()
 {
-  return Books.size();
+  return bookInventory.size();
 }
 
 Book Inventory::getBookByIndex(int index)
 {
-  return Books[index];
+  return bookInventory[index];
 }
 
+//Function to load data from txt file
 void Inventory::LoadBooks()
 {
-  Books.clear();
+  bookInventory.clear();
 
   std::ifstream in("books.txt");
 
@@ -30,7 +31,7 @@ void Inventory::LoadBooks()
   std::string bookLine;
   while(getline(in, bookLine))
   {
-  size_t  nextIndex = bookLine.find('|');
+  size_t nextIndex = bookLine.find('|');
   bookData[0] = bookLine.substr(0, nextIndex);
 
   size_t prevIndex = nextIndex;
@@ -50,48 +51,49 @@ void Inventory::LoadBooks()
   loadedBook.Id = stoi(bookData[0]);
   loadedBook.CheckInOrOut(stoi(bookData[3]));
 
-  Books.push_back(loadedBook);
+  bookInventory.push_back(loadedBook);
   }
 }
 
 void Inventory::addBook(Book book)
 {
   int nextBookId = 0;
-  if(Books.size() > 0)
+  if(bookInventory.size() > 0)
   {
-    nextBookId = Books.back().Id + 1;
+    nextBookId = bookInventory.back().Id + 1;
   }
-  //always asssume that last book in vector has the highest ID
+  //always assume that last book in vector has the highest ID
 
   book.Id = nextBookId;
 
-  Inventory::Books.push_back(book);
+  bookInventory.push_back(book);
 
+  ///append to books.txt
   std::ofstream o("books.txt", ios_base::app);
   o << book.GetBookFileData() << std::endl;
   o.close();
-
 }
 
+//find the book at the iterator and erase at that iterator
 void Inventory::removeBook(std::string title)
 {
- std::vector<Book>::iterator it = std::find(Inventory::Books.begin(), Inventory::Books.end(), Book( title, ""));
- if (it != Inventory::Books.end()) //.end refers to past the end
+ std::vector<Book>::iterator it = std::find(Inventory::bookInventory.begin(), Inventory::bookInventory.end(), Book( title, ""));
+ if (it != Inventory::bookInventory.end()) //.end refers to past the end
   {
-    Inventory::Books.erase(it);
+    Inventory::bookInventory.erase(it);
   }
 }
-//find the book at the iterator and erase at that iterator
 
+//find the book at the iterator and
 int Inventory::findBookByTitle(std::string title)
 {
-  std::vector<Book>::iterator it = std::find(Inventory::Books.begin(), Inventory::Books.end(), Book( title, ""));
- if (it == Inventory::Books.end()) //.end refers to past the end
+  std::vector<Book>::iterator it = std::find(Inventory::bookInventory.begin(), Inventory::bookInventory.end(), Book( title, ""));
+ if (it == bookInventory.end()) //.end refers to past the end
   {
     return -1;
   }
-
-    int index = it - Inventory::Books.begin();
+    int index = it - Inventory::bookInventory.begin();
+    return index;
 }
 
 CheckInOrOutResult Inventory::checkInOrOutBook(std::string title, bool checkOut) //pass by reference so value of book is changed
@@ -102,7 +104,7 @@ CheckInOrOutResult Inventory::checkInOrOutBook(std::string title, bool checkOut)
   {
     return CheckInOrOutResult::BookNotFound;
   }
-  else if(checkOut == Books[foundBookIndex].IsCheckedOut())
+  else if(checkOut == bookInventory[foundBookIndex].IsCheckedOut())
   {
     if(checkOut)
     {
@@ -112,15 +114,15 @@ CheckInOrOutResult Inventory::checkInOrOutBook(std::string title, bool checkOut)
     {
       return CheckInOrOutResult::AlreadyCheckedIn;
     }
-
   }
 
+  //last case: book must be avaliable in inventory, check book out
+  bookInventory[foundBookIndex].CheckInOrOut(checkOut);
 
-  Books[foundBookIndex].CheckInOrOut(checkOut);
-
+  //output to books.txt
   std::ofstream o("books.txt");
-  for (size_t i = 0; i < Books.size(); i++) {
-    o << Books[i].GetBookFileData() << endl;
+  for (size_t i = 0; i < bookInventory.size(); i++) {
+    o << bookInventory[i].GetBookFileData() << endl;
   }
 
   return CheckInOrOutResult::Success;
@@ -132,7 +134,7 @@ void Inventory::DisplayAllBooks()
   cout << "\nID\tTitle\tAuthor\n" <<endl;
   for (int i = 0; i < numberOfBooks(); i++)
   {
-    Books[i].DisplayBook();
+    bookInventory[i].DisplayBook();
   }
   cout << endl;
 
@@ -146,7 +148,7 @@ void Inventory::DisplayCheckedOutBooks()
   {
     if(getBookByIndex(i).IsCheckedOut())
     {
-      Books[i].DisplayBook();
+      bookInventory[i].DisplayBook();
     }
   }
   cout << endl;

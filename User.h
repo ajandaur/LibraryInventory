@@ -9,11 +9,12 @@ public:
   std::string FirstName;
   std::string LastName;
   std::string Username;
+  std::string Password;
   Role Role;
 
   bool operator ==(const User& user) const
   {
-    if(Username.compare(user.Username) == 0)
+    if(Username.compare(user.Username) == 0 && Password.compare(user.Password) == 0)
       return true;
     else
       return false;

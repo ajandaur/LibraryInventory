@@ -11,14 +11,14 @@ class Inventory
 
     void DisplayCheckedOutBooks();
     void DisplayAllBooks();
-    int numberOfBooks();
-    Book getBookByIndex(int index); //pointer
+    int numberOfBooks(); //returns number of books in vector
+    Book getBookByIndex(int index); //returns book at index
     void addBook(Book book);
     void LoadBooks();
     void removeBook (std::string title);
     int findBookByTitle(std::string title);
-    CheckInOrOutResult checkInOrOutBook(std::string title, bool checkOut); //pointer
+    CheckInOrOutResult checkInOrOutBook(std::string title, bool checkOut);
 
   private:
-    std::vector<Book> Books;
+    std::vector<Book> bookInventory;
 };

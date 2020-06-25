@@ -5,8 +5,8 @@ class Book {
   public:
     int Id;
 
-    Book();
-    Book(std::string title, std::string author);
+    Book(); //zero constructor
+    Book(std::string title, std::string author); //default constructor
 
     void CheckInOrOut(bool checkOut);
     void DisplayBook();

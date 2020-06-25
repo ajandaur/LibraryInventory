@@ -36,21 +36,25 @@ void LoadUsers()
 {
   ifstream in("users.txt");
 
-  string lineData[2];
+  string lineData[3];
   //lineData[0] = username
   //lineData[1] = role int val
+  //lineData[2] = password
 
 
   string userLine;
   while(getline(in, userLine))
   {
-  size_t  index = userLine.find('|');
+  size_t index = userLine.find('|');
   lineData[0] = userLine.substr(0, index);
-  lineData[1] = userLine.substr(index+1);
+  lineData[1] = userLine.substr(index+1, '|');
+  size_t index2 = userLine.find("password:");
+  lineData[2] = userLine.substr(index2 +1);
 
   User loadedUser;
   loadedUser.Username = lineData[0];
   loadedUser.Role = GetRoleFromIntVal(stoi(lineData[1]));
+  loadedUser.Password = lineData[2];
 
   _users.push_back(loadedUser);
   }
@@ -58,7 +62,7 @@ void LoadUsers()
 
 int GetIntValFromRole(Role role)
 {
-  int roleVal = -1;
+  int roleVal = -1; //default value
   if(role == Role::Admin)
   {
     roleVal = 0;
@@ -88,6 +92,9 @@ void CreateAccount ()
   cout << "Username: " <<endl;
   getline(cin, newUser.Username);
 
+  cout << "Password: " <<endl;
+  getline(cin, newUser.Password);
+
   cout << "Choose a role:" <<endl;
   cout << "1. Admin" <<endl;
   cout << "2. Employee" <<endl;
@@ -108,12 +115,12 @@ void CreateAccount ()
     newUser.Role = Role::Member;
   }
 
-  //3|anmol|0
+  //anmol|0|password:
 
   _users.push_back(newUser);
 
-  ofstream o("users.txt", ios_base::app);
-  o << newUser.Username << "|" << GetIntValFromRole(newUser.Role) << endl;
+  ofstream o("users.txt", ios_base::app); //apend to users.txt
+  o << newUser.Username << "|" << GetIntValFromRole(newUser.Role) << "|" << "password:" << newUser.Password << endl;
   o.close();
 }
 
@@ -135,16 +142,23 @@ void Login()
   cout << "Enter username: ";
   string username;
   getline(cin, username);
+  cout << "Enter password: ";
+  string password;
+  getline(cin, password);
 
   User user;
   user.Username = username;
+  user.Password = password;
 
   vector<User>::iterator it = find(_users.begin(), _users.end(), user);
-
+    //if user is found
     if(it != _users.end())
     {
       _loggedInUser = _users[it - _users.begin()];
       break;
+    } else //if user not found, try again
+    {
+      cout << "Incorrect username or password, try again.." << endl;
     }
   }
 }
@@ -193,14 +207,13 @@ void checkInOrOutBook(bool checkOut)
 {
   string inOrOut;
   if(checkOut)
-  {
-    inOrOut = "out";
-
-  }
+    {
+      inOrOut = "out";
+    }
   else
-  {
-    inOrOut = "in";
-  }
+    {
+      inOrOut = "in";
+    }
   cout << "Enter the title of the book you would like to check " + inOrOut + ": ";
   string title;
   getline(cin, title);
@@ -217,7 +230,7 @@ void checkInOrOutBook(bool checkOut)
   }
   else if(result == CheckInOrOutResult::AlreadyCheckedIn || result == CheckInOrOutResult::AlreadyCheckedOut)
   {
-    cout << "Book aleady checked " + inOrOut << endl;
+    cout << "Book already checked " + inOrOut << endl;
   }
   else
   {
@@ -227,7 +240,7 @@ void checkInOrOutBook(bool checkOut)
 
 void removeBook()
 {
-  cout << "What is the title of the book you want to add?" <<endl;
+  cout << "What is the title of the book you want to remove?" <<endl;
   string bookTitle;
   getline(cin, bookTitle); //use getline to get the full title
   _inventory.removeBook(bookTitle);
@@ -238,7 +251,6 @@ void displayCheckedOutBooks()
   _inventory.DisplayCheckedOutBooks();
 }
 
-
 int main()
 {
   LoadUsers();
@@ -246,7 +258,6 @@ int main()
   while(true)
   {
   Login();
-
 
   _inventory.LoadBooks();
   bool isLoggedIn = true;
@@ -290,5 +301,5 @@ int main()
         break;
       }
     }
-  } //end of while loop
+  } //end of while loop when user logs out
 }
