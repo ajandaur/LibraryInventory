@@ -4,16 +4,16 @@ A personal project where I created a library inventory/management system.
 
 Features include:
 
-- Login System
+- Creating and loading accounts with names,usernames,passwords, and roles (Admin, Employee, Member).
 
 - Login options
 
-- Add, modify, view and delete books
+- Add and remove books
 
-- Issue book
+- Check-in and check-out books
 
-- Return book
+- Display all books or display only checked-out books
 
-- Basic Fine charging system
+- Error handling for incorrect input
 
-**Highlights OOP prinicples, file handling, dynamic data structures, iterators, memory management
+**Highlights OOP principles, file handling, dynamic data structures, iterators, memory management
